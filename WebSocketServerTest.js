@@ -17,80 +17,84 @@ app.get('/test/:num', function (req, res) {
 })
 var contatore = 0;
 app.get('/CheckLogIn/:DATA', function (req, res) {
+    //json che viene inviato in response se il codice inserito non viene trovato
     var notFoundJson = {};
     //notFoundJson["Risposta"] = "NO";
     console.log("RICHIESTA ARRIVARTA: " + contatore);
     contatore++;
-
+    //esegue una query e asepetta la risposta in un altro thread
     con.query('SELECT * FROM risto_matic_android.cameriere WHERE password = ' + req.params.DATA, function (err, rows, fields) {
+        //se la query non ha dato errori sul database
         if (!err) {
             if (rows.length >= 1)
             {
+                //popola il json con il cameriere trovato e lo invia al client
                 console.log(rows[0]);
                 res.json(rows[0]);
             }
             else
             {
+                //invia il json vuoto
                 console.log(notFoundJson);
                 res.json(notFoundJson);
             }
             console.log("QUERY ANDATA A BUON FINE");
         }
+            //se la query ha dato errori sul database
         else {
             console.log("ERRORE:   " + err);
         }
     });
 })
 
-app.get('/GetTavoli', function (req, res) {
+app.get('/GetTables', function (req, res) {
     console.log("GetTavoli");
-    var jsonFormattato = [];
-    var jsonTavolo = {};
+    var formattedJson = [];
+    var tableJson = {};
     con.query('CALL SelectTables()', function (err, rows, fields) {
         if (!err) {
-            var idTavoloPrecedente = 0;
-            var dataOraPrecedente = false;
-            var primaVoltaNelForEach = true;
+            var previusIdTable = 0;
+            var previusDateTime = false;
+            var firstTimeInForEach = true;
             rows[0].forEach(function(element) {
-                var idTavoloCorrente = parseInt(element["tavolo_id"], 10);
+                var currentIdTable = parseInt(element["tavolo_id"], 10);
                 if (element["dataOraPrenotazione"] == null)
                 {
-                    if (dataOraPrecedente)
-                        jsonFormattato.push(jsonTavolo);
-                    jsonTavolo = {};
-                    jsonTavolo["tavolo_id"] = element["tavolo_id"];
-                    jsonTavolo["nome_stato"] = element["nome_stato"];
-                    jsonTavolo["dataOraPrenotazione"] = [];
-                    jsonFormattato.push(jsonTavolo);
-                    dataOraPrecedente = false;
+                    if (previusDateTime)
+                        formattedJson.push(tableJson);
+                    tableJson = {};
+                    tableJson["tavolo_id"] = element["tavolo_id"];
+                    tableJson["nome_stato"] = element["nome_stato"];
+                    tableJson["dataOraPrenotazione"] = [];
+                    formattedJson.push(tableJson);
+                    previusDateTime = false;
                 }
                 else
                 {
-                    if(idTavoloCorrente == idTavoloPrecedente)
+                    if (currentIdTable == previusIdTable)
                     {
-                        jsonTavolo["dataOraPrenotazione"].push(element["dataOraPrenotazione"]);
+                        tableJson["dataOraPrenotazione"].push(element["dataOraPrenotazione"]);
                     }
                     else
                     {
-                        if (!primaVoltaNelForEach)
+                        if (!firstTimeInForEach)
                         {
-                            jsonFormattato.push(jsonTavolo);
+                            formattedJson.push(tableJson);
                             
                         }
-                        primaVoltaNelForEach = false;
-                        jsonTavolo = {};
-                        jsonTavolo["tavolo_id"] = element["tavolo_id"];
-                        jsonTavolo["nome_stato"] = element["nome_stato"];
-                        jsonTavolo["dataOraPrenotazione"] = [];
-                        jsonTavolo["dataOraPrenotazione"].push(element["dataOraPrenotazione"]);
+                        firstTimeInForEach = false;
+                        tableJson = {};
+                        tableJson["tavolo_id"] = element["tavolo_id"];
+                        tableJson["nome_stato"] = element["nome_stato"];
+                        tableJson["dataOraPrenotazione"] = [];
+                        tableJson["dataOraPrenotazione"].push(element["dataOraPrenotazione"]);
                     }
-                    dataOraPrecedente = true;
+                    previusDateTime = true;
                 }
-                console.log(jsonFormattato);
-                console.log("\nFINE FOR EACH\n");
-                idTavoloPrecedente = idTavoloCorrente;
+                previusIdTable = currentIdTable;
             });
-            res.json(jsonFormattato);
+            console.log(formattedJson);
+            res.json(formattedJson);
         }
         else {
             console.log(err);
