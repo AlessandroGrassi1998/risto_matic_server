@@ -47,21 +47,25 @@ app.get('/CheckLogIn/:DATA', function (req, res) {
     });
 })
 
-app.get('/GetTables/:sala', function (req, res) {
-    var sala = req.params.sala;
+app.get('/getTablesInRoom/:sala', function (req, res) {
+    var sala = parseInt(req.params.sala);
+    
     console.log("GetTavoli");
     var formattedJson = [];
     var tableJson = {};
-    con.query('CALL SelectTables('+ sala +')', function (err, rows, fields) {
+    con.query('SELECT * FROM risto_matic_android.gettablesinroom WHERE sala = ' + (sala+1) + ';', function (err, rows, fields) {
         if (!err) {
             var previusIdTable = 0;
             var previusDateTime = false;
             var firstTimeInForEach = true;
-            rows[0].forEach(function(element) {
+            var counter = 0;
+            console.log(rows.length);
+            rows.forEach(function(element) {
                 var currentIdTable = parseInt(element["tavolo_id"], 10);
                 if (element["dataOraPrenotazione"] == null)
                 {
-                    if (previusDateTime)
+                    console.log(counter++);
+                    if (previusDateTime && !firstTimeInForEach)
                         formattedJson.push(tableJson);
                     tableJson = {};
                     tableJson["idTable"] = element["tavolo_id"];
@@ -93,6 +97,7 @@ app.get('/GetTables/:sala', function (req, res) {
                     previusDateTime = true;
                 }
                 previusIdTable = currentIdTable;
+                firstTimeInForEach = false;
             });
             console.log(formattedJson);
             res.json(formattedJson);
@@ -108,13 +113,80 @@ app.get('/GetTablesRooms', function (req, res) {
     var roomJson = [];
     var formattedJson = [];
 
-    con.query('call getAllTablesAndRooms', function (err, rows, fields) {
+    con.query('SELECT * FROM risto_matic_android.gettablesinroom;', function (err, rows, fields) {        
         if (!err) {
             var previusIdTable = 0;
             var previusRoom = 0;
             var previusDateTime = false;
             var firstTimeInForEach = true;
-            var lastRoom = rows[0][rows[0].length-1]["sala"];
+            var lastRoom = rows[rows.length-1]["sala"];
+            rows.forEach(function (element) {
+                var currentIdTable = parseInt(element["tavolo_id"], 10);
+                var currentRoom = parseInt(element["sala"], 10);
+
+                if (currentRoom != previusRoom && !firstTimeInForEach) {
+                    formattedJson.push(roomJson);
+                    roomJson = [];
+                }
+                
+
+                if (element["dataOraPrenotazione"] == null) {
+                    if (previusDateTime)
+                        roomJson.push(tableJson);
+                    tableJson = {};
+                    tableJson["idTable"] = element["tavolo_id"];
+                    tableJson["state"] = element["nome_stato"];
+                    tableJson["dataOraPrenotazione"] = [];
+                    roomJson.push(tableJson);
+                    previusDateTime = false;
+                }
+                else {
+                    if (currentIdTable == previusIdTable) {
+                        tableJson["dataOraPrenotazione"].push(element["dataOraPrenotazione"]);
+                    }
+                    else {
+                        if (!firstTimeInForEach) {
+                            roomJson.push(tableJson);
+                        }
+                        tableJson = {};
+                        tableJson["idTable"] = element["tavolo_id"];
+                        tableJson["state"] = element["nome_stato"];
+                        tableJson["dataOraPrenotazione"] = [];
+                        tableJson["dataOraPrenotazione"].push(element["dataOraPrenotazione"]);
+                    }
+                    previusDateTime = true;
+                }
+                previusRoom = currentRoom;
+                firstTimeInForEach = false;
+                previusIdTable = currentIdTable;
+            });
+            formattedJson.push(roomJson);
+
+            console.log(formattedJson);
+            res.json(formattedJson);
+            console.log("QUERY ANDATA A BUON FINE");
+        }
+        else {
+            console.log(err);
+        }
+    });
+
+    })
+
+
+/*
+app.get('/GetTablesRooms', function (req, res) {
+    var tableJson = {};
+    var roomJson = [];
+    var formattedJson = [];
+
+    con.query('call getAllTablesAndRooms()', function (err, rows, fields) {
+        if (!err) {
+            var previusIdTable = 0;
+            var previusRoom = 0;
+            var previusDateTime = false;
+            var firstTimeInForEach = true;
+            var lastRoom = rows[0][rows[0].length - 1]["sala"];
             rows[0].forEach(function (element) {
                 var currentIdTable = parseInt(element["tavolo_id"], 10);
                 var currentRoom = parseInt(element["sala"], 10);
@@ -166,8 +238,8 @@ app.get('/GetTablesRooms', function (req, res) {
         }
     });
 
-})
-
+    })
+*/
 app.get('/addPiatto/:JsonPiatto', function (req, res) {
     console.log(req.params.JsonPiatto);
     if (IsJsonString(req.params.JsonPiatto))
