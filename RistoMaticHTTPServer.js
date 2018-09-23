@@ -6,6 +6,14 @@ var fs = require("fs");
 var express = require("express");
 var cors = require('cors');
 var app = express();
+// Load the module
+var bodyParser = require('body-parser');
+
+// Mount body-parser middleware, and instruct it to 
+// process form url-encoded data
+app.use(bodyParser.urlencoded({ extended: true }));
+
+
 app.use(cors());
 var serverExpress = app.listen(8080, function () {
     console.log("********HTTP SERVER STARTED**********");
@@ -50,7 +58,7 @@ app.get('/CheckLogIn/:DATA', function (req, res) {
 app.get('/getTablesInRoom/:sala', function (req, res) {
     var sala = parseInt(req.params.sala);
     
-    console.log("GetTavoli");
+    console.log("GetTablesInRoom: " + sala + "\n");
     var formattedJson = [];
     var tableJson = {};
     con.query('SELECT * FROM risto_matic_android.gettablesinroom WHERE sala = ' + (sala+1) + ';', function (err, rows, fields) {
@@ -59,12 +67,10 @@ app.get('/getTablesInRoom/:sala', function (req, res) {
             var previusDateTime = false;
             var firstTimeInForEach = true;
             var counter = 0;
-            console.log(rows.length);
             rows.forEach(function(element) {
                 var currentIdTable = parseInt(element["tavolo_id"], 10);
                 if (element["dataOraPrenotazione"] == null)
                 {
-                    console.log(counter++);
                     if (previusDateTime && !firstTimeInForEach)
                         formattedJson.push(tableJson);
                     tableJson = {};
@@ -99,7 +105,6 @@ app.get('/getTablesInRoom/:sala', function (req, res) {
                 previusIdTable = currentIdTable;
                 firstTimeInForEach = false;
             });
-            console.log(formattedJson);
             res.json(formattedJson);
         }
         else {
@@ -172,6 +177,24 @@ app.get('/GetTablesRooms', function (req, res) {
     });
 
     })
+
+app.post('/changeTableState/:parameters', function (req, res) {
+    console.log("RICHIESTA LALERO");
+    console.log(req.body);
+    console.log(req.query);
+    console.log(req.params);
+    var data = [];
+    //UPDATE `risto_matic_android`.`tavolo` SET `fk_stato_tavolo_id`='2' WHERE `tavolo_id`='1';
+    var parametersInJson = JSON.parse(req.params.parameters);
+    con.query('UPDATE `risto_matic_android`.`tavolo` SET `fk_stato_tavolo_id`=' +/*DA MODIFICARE!!*/ 2 + ' WHERE `tavolo_id`=' + parametersInJson.idTavolo + ';', function (err, rows, fields) {
+        //se la query non ha dato errori sul database
+        if (!err) {}
+        else 
+            console.log("ERRORE:   " + err);
+        
+    });
+    res.status(201).json(data);
+});
 
 
 /*
