@@ -6,6 +6,7 @@ var fs = require("fs");
 var express = require("express");
 var cors = require('cors');
 var app = express();
+const PORT = process.env.PORT || 3000
 // Load the module
 var bodyParser = require('body-parser');
 
@@ -15,7 +16,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 
 app.use(cors());
-var serverExpress = app.listen(8080, function () {
+var serverExpress = app.listen(PORT, function () {
     console.log("********HTTP SERVER STARTED**********");
 });
 
