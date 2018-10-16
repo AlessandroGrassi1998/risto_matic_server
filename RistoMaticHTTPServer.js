@@ -6,7 +6,7 @@ var fs = require("fs");
 var express = require("express");
 var cors = require('cors');
 var app = express();
-const PORT = process.env.PORT || 3000
+const PORT = process.env.PORT || 8080
 // Load the module
 var bodyParser = require('body-parser');
 
