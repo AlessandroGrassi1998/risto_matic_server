@@ -18,6 +18,7 @@
   },
   "homepage": "https://github.com/FunnyStones/risto_matic_server#readme",
   "dependencies": {
-    "express": "^4.16.4"
+    "express": "^4.16.4",
+	"mysql": "5.6.0"
   }
 }
