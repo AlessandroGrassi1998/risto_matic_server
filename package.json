@@ -16,5 +16,8 @@
   "bugs": {
     "url": "https://github.com/FunnyStones/risto_matic_server/issues"
   },
-  "homepage": "https://github.com/FunnyStones/risto_matic_server#readme"
+  "homepage": "https://github.com/FunnyStones/risto_matic_server#readme",
+  "dependencies": {
+    "express": "^4.16.4"
+  }
 }
