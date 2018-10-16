@@ -1,21 +1,9 @@
-var WebSocketServer = require('websocket').server;
-var http = require('http');
 var mysql = require("mysql");
-
-var fs = require("fs");
 var express = require("express");
-var cors = require('cors');
 var app = express();
 const PORT = process.env.PORT || 8080
-// Load the module
-var bodyParser = require('body-parser');
-
-// Mount body-parser middleware, and instruct it to 
-// process form url-encoded data
-app.use(bodyParser.urlencoded({ extended: true }));
 
 
-app.use(cors());
 var serverExpress = app.listen(PORT, function () {
     console.log("********HTTP SERVER STARTED**********");
 });
@@ -230,72 +218,7 @@ app.get('/getVariants', function (req, res) {
     });
 })
 
-/*
-app.get('/GetTablesRooms', function (req, res) {
-    var tableJson = {};
-    var roomJson = [];
-    var formattedJson = [];
 
-    con.query('call getAllTablesAndRooms()', function (err, rows, fields) {
-        if (!err) {
-            var previusIdTable = 0;
-            var previusRoom = 0;
-            var previusDateTime = false;
-            var firstTimeInForEach = true;
-            var lastRoom = rows[0][rows[0].length - 1]["sala"];
-            rows[0].forEach(function (element) {
-                var currentIdTable = parseInt(element["tavolo_id"], 10);
-                var currentRoom = parseInt(element["sala"], 10);
-
-                if (currentRoom != previusRoom && !firstTimeInForEach) {
-                    formattedJson.push(roomJson);
-                    roomJson = [];
-                }
-                
-
-                if (element["dataOraPrenotazione"] == null) {
-                    if (previusDateTime)
-                        roomJson.push(tableJson);
-                    tableJson = {};
-                    tableJson["idTable"] = element["tavolo_id"];
-                    tableJson["state"] = element["nome_stato"];
-                    tableJson["dataOraPrenotazione"] = [];
-                    roomJson.push(tableJson);
-                    previusDateTime = false;
-                }
-                else {
-                    if (currentIdTable == previusIdTable) {
-                        tableJson["dataOraPrenotazione"].push(element["dataOraPrenotazione"]);
-                    }
-                    else {
-                        if (!firstTimeInForEach) {
-                            roomJson.push(tableJson);
-                        }
-                        tableJson = {};
-                        tableJson["idTable"] = element["tavolo_id"];
-                        tableJson["state"] = element["nome_stato"];
-                        tableJson["dataOraPrenotazione"] = [];
-                        tableJson["dataOraPrenotazione"].push(element["dataOraPrenotazione"]);
-                    }
-                    previusDateTime = true;
-                }
-                previusRoom = currentRoom;
-                firstTimeInForEach = false;
-                previusIdTable = currentIdTable;
-            });
-            formattedJson.push(roomJson);
-
-            console.log(formattedJson);
-            res.json(formattedJson);
-            console.log("QUERY ANDATA A BUON FINE");
-        }
-        else {
-            console.log(err);
-        }
-    });
-
-    })
-*/
 app.get('/addPiatto/:JsonPiatto', function (req, res) {
     console.log(req.params.JsonPiatto);
     if (IsJsonString(req.params.JsonPiatto))
@@ -336,90 +259,3 @@ var con = mysql.createConnection({
     database: "risto_matic_android"
 });
 con.connect();
-
-
-var server = http.createServer(function(request, response) {
-  // process HTTP request. Since we're writing just WebSockets
-    // server we don't have to implement anything.
-    response.end("WORK!!");
-});
-server.listen(1337, function() {console.log("SERVER STARTED"); });
-
-
-
-// create the server
-wsServer = new WebSocketServer({
-  httpServer: server
-});
-
-var connections = [];
-
-function getConnectionIndex(connection)
-{
-	for(var i=0;i<connections.length;i++)
-	{
-		if(connections[i] == connection)
-		{
-			return i+1;
-		}
-	}
-}
-var messages = {}
-var countMessages = 1;
-var key = 'Message';
-
-
-function putInJSON(utf8Data, connection)
-{
-	key = 'Message' + countMessages++ + ' WAITER ' + getConnectionIndex(connection);
-	messages[key] = [];
-	messages[key].push(utf8Data);
-}
-
-function readFromJSON(utf8Data, connection)
-{
-    var jsonData = JSON.parse(utf8Data);
-    var tavolo = jsonData["tavolo"];
-    var ordinazioni = jsonData["ordinazioni"];
-
-
-    for (var i = 0; i < ordinazioni.length; i++)
-    {
-        con.query('INSERT INTO `sakila`.`actor` (`first_name`, `last_name`) VALUES ("WAITER: ' + tavolo + '", "' + ordinazioni[i] + '")', function (err, rows, fields) {
-            if (!err) {
-                console.log("QUERY ANDATA A BUON FINE");
-            }
-            else {
-                console.log("ERRORE:   " + err);
-            }
-        });
-    }
-}
-
-// WebSocket server
-//wsServer.on('request', function(request) {
-//  var connection = request.accept(null, request.origin);
-//console.log("A connection started");
-//	connections.push(connection);
-//	console.log("WAITER " + connections.length);
-//  // This is the most important callback for us, we'll handle
-//  // all messages from users here.
-//  connection.on('message', function(message) {
-//      if (message.type === 'utf8') {
-          
-//      // process WebSocket message
-//	  connection.sendUTF(message.utf8Data);
-//          console.log("MESSAGE RECEIVED FORM WAITER " + getConnectionIndex(connection) + ": " + message.utf8Data);
-          
-//	  //putInJSON(message.utf8Data, connection);
-//	  //console.log(messages);
-//	  //readFromJSON(message.utf8Data, connection);
-
-//    }
-// });
-
-//  connection.on('close', function(connection) {
-//    // close user connection
-//	console.log("A connection is closed");
-//  });
-//});
