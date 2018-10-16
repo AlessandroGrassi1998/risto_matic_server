@@ -112,7 +112,7 @@ app.get('/getTablesInRoom/:sala', function (req, res) {
         }
     });
 })
-
+var JsonInGetTablesRooms;
 app.get('/GetTablesRooms', function (req, res) {
     var tableJson = {};
     var roomJson = [];
@@ -120,22 +120,29 @@ app.get('/GetTablesRooms', function (req, res) {
 
     con.query('SELECT * FROM risto_matic_android.gettablesinroom;', function (err, rows, fields) {        
         if (!err) {
+            //tutti gli id precedenti sono settati a 0
             var previusIdTable = 0;
             var previusRoom = 0;
             var previusDateTime = false;
+            //prima volta nel foreach
             var firstTimeInForEach = true;
-            var lastRoom = rows[rows.length-1]["sala"];
+            //numero dell'ultima sala
+            var lastRoom = rows[rows.length - 1]["sala"];
+            //scorre tutti i tavoli
             rows.forEach(function (element) {
+                //salva gli id del tavolo corrente
                 var currentIdTable = parseInt(element["tavolo_id"], 10);
                 var currentRoom = parseInt(element["sala"], 10);
 
+                //se il tavolo corrente si trova in un altra sala inserisce roomJson nel json finale
                 if (currentRoom != previusRoom && !firstTimeInForEach) {
                     formattedJson.push(roomJson);
                     roomJson = [];
                 }
                 
-
+                //se il tavolo non ha prenotazioni 
                 if (element["dataOraPrenotazione"] == null) {
+                    //se il tavolo prima non ha prenotazioni
                     if (previusDateTime)
                         roomJson.push(tableJson);
                     tableJson = {};
@@ -145,7 +152,9 @@ app.get('/GetTablesRooms', function (req, res) {
                     roomJson.push(tableJson);
                     previusDateTime = false;
                 }
+                //se il tavolo corrente ha prenotazioni
                 else {
+                    //se il tavolo corrente
                     if (currentIdTable == previusIdTable) {
                         tableJson["dataOraPrenotazione"].push(element["dataOraPrenotazione"]);
                     }
@@ -168,6 +177,7 @@ app.get('/GetTablesRooms', function (req, res) {
             formattedJson.push(roomJson);
 
             console.log(formattedJson);
+            JsonInGetTablesRooms = formattedJson;
             res.json(formattedJson);
             console.log("QUERY ANDATA A BUON FINE");
         }
@@ -179,12 +189,8 @@ app.get('/GetTablesRooms', function (req, res) {
     })
 
 app.post('/changeTableState/:parameters', function (req, res) {
-    console.log("RICHIESTA LALERO");
-    console.log(req.body);
-    console.log(req.query);
-    console.log(req.params);
+    console.log("CHANGE TABLE STATE");
     var data = [];
-    //UPDATE `risto_matic_android`.`tavolo` SET `fk_stato_tavolo_id`='2' WHERE `tavolo_id`='1';
     var parametersInJson = JSON.parse(req.params.parameters);
     con.query('UPDATE `risto_matic_android`.`tavolo` SET `fk_stato_tavolo_id`=' +/*DA MODIFICARE!!*/ 2 + ' WHERE `tavolo_id`=' + parametersInJson.idTavolo + ';', function (err, rows, fields) {
         //se la query non ha dato errori sul database
@@ -196,6 +202,32 @@ app.post('/changeTableState/:parameters', function (req, res) {
     res.status(201).json(data);
 });
 
+app.get('/getMenu', function (req, res) {
+    con.query('SELECT * FROM risto_matic_android.categories;', function (err, rows, fields) {
+        //se la query non ha dato errori sul database
+        if (!err) {
+            console.log(rows);
+            rows.forEach((function (element) {
+                element["piatti"] = JSON.parse(element["piatti"]);
+            }));
+            res.status(201).json(rows);
+        }
+        else
+            console.log("ERRORE: " + err);
+    });
+})
+
+app.get('/getVariants', function (req, res) {
+    console.log("getVariants");
+    con.query('SELECT * FROM risto_matic_android.variante;', function (err, rows, fields) {
+        //se la query non ha dato errori sul database
+        if (!err) {
+            res.status(201).json(rows);
+        }
+        else
+            console.log("ERRORE: " + err);
+    });
+})
 
 /*
 app.get('/GetTablesRooms', function (req, res) {
