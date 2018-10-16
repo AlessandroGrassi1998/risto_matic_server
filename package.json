@@ -1,0 +1,20 @@
+{
+  "name": "risto-matic-server",
+  "version": "1.0.0",
+  "description": "web service che gestisce le chiamate http da un client risto matic",
+  "main": "RistoMaticHTTPServer.js",
+  "scripts": {
+	"start": "node RistoMaticHTTPServer.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/FunnyStones/risto_matic_server.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/FunnyStones/risto_matic_server/issues"
+  },
+  "homepage": "https://github.com/FunnyStones/risto_matic_server#readme"
+}
